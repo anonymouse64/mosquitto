@@ -44,6 +44,9 @@ typedef int ssize_t;
 #include <util_mosq.h>
 #include <will_mosq.h>
 
+//for threading
+#include "dummypthread.h"
+
 #include "config.h"
 
 #if !defined(WIN32) && !defined(__SYMBIAN32__)
