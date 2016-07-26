@@ -23,7 +23,11 @@ Contributors:
 #include "mosquitto_internal.h"
 #include "net_mosq.h"
 
+#ifdef WIN32 
+DWORD WINAPI mosquitto__thread_main(LPVOID obj);
+#else
 void *mosquitto__thread_main(void *obj);
+#endif
 
 int mosquitto_loop_start(struct mosquitto *mosq)
 {
@@ -31,7 +35,7 @@ int mosquitto_loop_start(struct mosquitto *mosq)
 	if(!mosq || mosq->threaded != mosq_ts_none) return MOSQ_ERR_INVAL;
 
 	mosq->threaded = mosq_ts_self;
-	if(!pthread_create(&mosq->thread_id, NULL, mosquitto__thread_main, mosq)){
+	if(!pthread_create(&mosq->thread_id, NULL, mosquitto__thread_main, (LPVOID) mosq)){
 		return MOSQ_ERR_SUCCESS;
 	}else{
 		return MOSQ_ERR_ERRNO;
@@ -76,11 +80,20 @@ int mosquitto_loop_stop(struct mosquitto *mosq, bool force)
 }
 
 #ifdef WITH_THREADING
+#ifdef WIN32
+DWORD WINAPI mosquitto__thread_main(LPVOID obj)
+#else
 void *mosquitto__thread_main(void *obj)
+#endif
 {
 	struct mosquitto *mosq = obj;
 
-	if(!mosq) return NULL;
+	if (!mosq)
+#ifdef WIN32
+		return 0;
+#else
+		return NULL;
+#endif
 
 	pthread_mutex_lock(&mosq->state_mutex);
 	if(mosq->state == mosq_cs_connect_async){
@@ -98,7 +111,11 @@ void *mosquitto__thread_main(void *obj)
 		mosquitto_loop_forever(mosq, mosq->keepalive*1000, 1);
 	}
 
+#ifdef WIN32
+	return 0;
+#else
 	return obj;
+#endif
 }
 #endif
 
