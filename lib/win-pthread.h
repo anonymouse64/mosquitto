@@ -12,7 +12,7 @@
 #	define pthread_equal(thread1, thread2) (GetThreadId( (thread1) ) == GetThreadId( (thread2) ))
 #	define pthread_self() GetCurrentThread()
 	//this long one-liner will return GetLastError if there was an error, else NULL if no error
-#	define pthread_create(thread, param, run_function, init_arg) ( * (thread) = CreateThread(NULL, 0, (run_function) , (init_arg) , 0, NULL) ) == 0 ? GetLastError() : 0
+#	define pthread_create(thread, param, run_function, init_arg) (((*(thread) = CreateThread(NULL, 0, (run_function), (init_arg), 0, NULL)) == NULL) ? GetLastError() : 0)
 #	define pthread_join(otherThread, param) WaitForSingleObject( (otherThread) , INFINITE)
 	//for thread_cancel, just wait for the thread to finish with WaitForSingleObject
 #	define pthread_cancel(thread) WaitForSingleObject( (thread), INFINITE )
