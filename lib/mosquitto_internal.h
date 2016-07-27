@@ -31,7 +31,11 @@ Contributors:
 #include <stdlib.h>
 
 #if defined(WITH_THREADING) && !defined(WITH_BROKER)
-#  include <pthread.h>
+#  ifdef WIN32
+#     include "win-pthread.h"
+#  else
+#     include <pthread.h>
+#  endif
 #else
 #  include <dummypthread.h>
 #endif
