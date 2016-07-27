@@ -273,6 +273,25 @@ void mosquitto__destroy(struct mosquitto *mosq)
 
 #ifdef WITH_THREADING
 	if(mosq->threaded == mosq_ts_self && !pthread_equal(mosq->thread_id, pthread_self())){
+		//set the state to disconnecting to force the thread to stop
+		pthread_mutex_lock(&mosq->state_mutex);
+		mosq->state = mosq_cs_disconnecting;
+		pthread_mutex_unlock(&mosq->state_mutex);
+
+#		ifndef WITH_BROKER
+			char sockpair_data = 0;
+			/* Write a single byte to sockpairW (connected to sockpairR) to break out
+			* of select() if in threaded mode. */
+			if (mosq->sockpairW != INVALID_SOCKET){
+#			ifndef WIN32
+				if (write(mosq->sockpairW, &sockpair_data, 1)){
+				}
+#			else
+				send(mosq->sockpairW, &sockpair_data, 1, 0);
+#			endif
+#		endif
+
+		}
 		pthread_cancel(mosq->thread_id);
 		pthread_join(mosq->thread_id, NULL);
 		mosq->threaded = mosq_ts_none;

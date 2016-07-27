@@ -58,6 +58,10 @@ int mosquitto_loop_stop(struct mosquitto *mosq, bool force)
 
 	if(!mosq || mosq->threaded != mosq_ts_self) return MOSQ_ERR_INVAL;
 
+	//set the state to disconnecting to force the thread to stop
+	pthread_mutex_lock(&mosq->state_mutex);
+	mosq->state = mosq_cs_disconnecting;
+	pthread_mutex_unlock(&mosq->state_mutex);
 
 	/* Write a single byte to sockpairW (connected to sockpairR) to break out
 	 * of select() if in threaded mode. */
